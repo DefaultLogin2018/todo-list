@@ -7,7 +7,7 @@ function TaskList({ tasks, toggleTask, deleteTask }) {
             {tasks.length ? (
                 tasks.map((task) => (
                     <Task
-                        key={task.id}
+                        key={task._id}
                         task={task}
                         toggleTask={toggleTask}
                         deleteTask={deleteTask}

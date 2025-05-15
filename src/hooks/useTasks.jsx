@@ -1,36 +1,97 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-function useTasks() {
-    const [tasks, setTasks] = useState([
-        { id: 1, title: 'Buy milk', completed: false, deadline: '2025-05-10' },
-        { id: 2, title: 'Walk dog', completed: true, deadline: '2025-05-11' },
-    ]);
+function useTasks(isAuthenticated) {
+    const [tasks, setTasks] = useState([]);
 
-    const addTask = (title, deadline) => {
-        setTasks((prev) => [
-            ...prev,
-            {
-                id: prev.length + 1,
-                title,
-                completed: false,
-                deadline,
-            },
-        ]);
+    const fetchTasks = useCallback(async () => {
+        if (!isAuthenticated) {
+            setTasks([]);
+            return;
+        }
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setTasks([]);
+                return;
+            }
+            const response = await fetch('http://localhost:5000/tasks', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            setTasks(data);
+        } catch (err) {
+            console.error('Error fetching tasks:', err);
+            setTasks([]);
+        }
+    }, [isAuthenticated]);
+
+    useEffect(() => {
+        fetchTasks();
+    }, [fetchTasks]);
+
+    const addTask = async (title, deadline) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/tasks', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, deadline }),
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const newTask = await response.json();
+            setTasks((prev) => [...prev, newTask]);
+        } catch (err) {
+            console.error('Error adding task:', err);
+        }
     };
 
-    const toggleTask = (id) => {
-        setTasks((prev) =>
-            prev.map((task) =>
-                task.id === id ? { ...task, completed: !task.completed } : task
-            )
-        );
+    const toggleTask = async (id) => {
+        try {
+            const task = tasks.find((t) => t._id === id);
+            if (!task) throw new Error('Task not found');
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/tasks/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ completed: !task.completed }),
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const updatedTask = await response.json();
+            setTasks((prev) =>
+                prev.map((t) => (t._id === id ? updatedTask : t))
+            );
+        } catch (err) {
+            console.error('Error toggling task:', err);
+        }
     };
 
-    const deleteTask = (id) => {
-        setTasks((prev) => prev.filter((task) => task.id !== id));
+    const deleteTask = async (id) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/tasks/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            setTasks((prev) => prev.filter((t) => t._id !== id));
+        } catch (err) {
+            console.error('Error deleting task:', err);
+        }
     };
 
-    return { tasks, addTask, toggleTask, deleteTask };
+    return { tasks, addTask, toggleTask, deleteTask, fetchTasks };
 }
 
 export default useTasks;
