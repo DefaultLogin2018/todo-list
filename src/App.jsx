@@ -5,40 +5,39 @@ import Login from './components/Login.jsx';
 import Register from './components/Register.jsx';
 import TaskPage from './components/TaskPage.jsx';
 import useTasks from './hooks/useTasks.jsx';
+import VantaBackground from './components/VantaBackground.jsx';
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(localStorage.getItem('email') || '');
     const { tasks, addTask, toggleTask, deleteTask, fetchTasks } = useTasks(isAuthenticated);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
+        const storedEmail = localStorage.getItem('email');
         setIsAuthenticated(!!token);
-        if (token) {
-            setEmail('zeleboba@example.com'); // Замени на реальный email
-        }
-    }, []);
+        setEmail(storedEmail || '');
+        if (token) fetchTasks();
+    }, [fetchTasks]);
 
-    const handleLogin = () => {
+    const handleLogin = (userEmail) => {
         setIsAuthenticated(true);
-        setEmail('zeleboba@example.com'); // Замени на реальный email
+        setEmail(userEmail);
         fetchTasks();
-    };
-
-    const handleRegister = () => {
-        setIsAuthenticated(false);
     };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('email');
         setIsAuthenticated(false);
         setEmail('');
-        fetchTasks();
+        setTasks([]);
     };
 
     return (
         <Router>
-            <div className="flex flex-col min-h-screen">
+            <div className="flex flex-col items-center relative">
+                <VantaBackground />
                 <Header
                     isAuthenticated={isAuthenticated}
                     email={email}
@@ -59,7 +58,7 @@ function App() {
                         path="/register"
                         element={
                             !isAuthenticated ? (
-                                <Register onRegister={handleRegister} />
+                                <Register />
                             ) : (
                                 <Navigate to="/tasks" replace />
                             )
@@ -74,7 +73,6 @@ function App() {
                                     addTask={addTask}
                                     toggleTask={toggleTask}
                                     deleteTask={deleteTask}
-                                    onLogout={handleLogout}
                                 />
                             ) : (
                                 <Navigate to="/login" replace />

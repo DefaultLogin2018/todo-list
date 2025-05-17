@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Navbar, Button } from 'flowbite-react';
+import { Button } from '../components/ui/button';
 
 function Header({ isAuthenticated, email, onLogout }) {
     const navigate = useNavigate();
@@ -12,19 +12,18 @@ function Header({ isAuthenticated, email, onLogout }) {
     };
 
     return (
-        <Navbar fluid rounded className="bg-transparent w-full py-4 px-6">
+        <header className="bg-transparent py-4 px-6 mx-auto w-[1000px] max-w-full">
             <div className="flex justify-between items-center w-full">
-                <Navbar.Brand as={Link} to="/">
-                    <span className="text-xl font-semibold text-white">To-Do List</span>
-                </Navbar.Brand>
+                <Link to="/" className="text-3xl font-bold text-black">
+                    To-Do List
+                </Link>
                 <div className="flex items-center space-x-4">
                     {isAuthenticated ? (
                         <>
                             <span className="text-white font-medium">{email}</span>
                             <Button
-                                color="failure"
                                 onClick={handleLogout}
-                                size="sm"
+                                variant="gradient"
                             >
                                 Logout
                             </Button>
@@ -33,13 +32,13 @@ function Header({ isAuthenticated, email, onLogout }) {
                         <>
                             {location.pathname === '/register' ? (
                                 <Link to="/login">
-                                    <Button className="custom-green-button">
-                                         Авторизация
+                                    <Button variant="gradient">
+                                        Авторизация
                                     </Button>
                                 </Link>
                             ) : (
                                 <Link to="/register">
-                                    <Button className="custom-purple-button">
+                                    <Button variant="gradient">
                                         Регистрация
                                     </Button>
                                 </Link>
@@ -48,7 +47,7 @@ function Header({ isAuthenticated, email, onLogout }) {
                     )}
                 </div>
             </div>
-        </Navbar>
+        </header>
     );
 }
 
